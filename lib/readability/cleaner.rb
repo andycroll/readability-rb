@@ -596,8 +596,29 @@ module Readability
       end
 
       to_absolute_uri = lambda do |uri|
+        # Strip whitespace — Nokogiri preserves newlines in attributes,
+        # but JS DOM normalizes them
+        uri = uri.strip
+
         # Leave hash links alone if base URI matches document URI
         return uri if base_uri == document_uri && uri.start_with?("#")
+
+        begin
+          # If URI already has a non-HTTP scheme, return it (possibly normalized)
+          # (e.g. mailto:, tel:, data:, etc.) — URI.join mangles these
+          # Only check well-formed URIs; malformed ones should fall through to URI.join
+          parsed = URI.parse(uri)
+          if parsed.scheme && !%w[http https].include?(parsed.scheme.downcase)
+            # Normalize Windows drive letters in file: URIs (C| -> C:) per WHATWG URL spec
+            if parsed.scheme == "file"
+              return uri.sub(%r{\A(file:///[A-Za-z])\|(/)}i, '\1:\2')
+            end
+            return uri
+          end
+        rescue URI::InvalidURIError, URI::InvalidComponentError, URI::BadURIError
+          # Couldn't parse — might be a relative URI with special chars
+          # Fall through to URI.join which may handle it
+        end
 
         begin
           resolved = URI.join(base_uri, uri)
@@ -607,7 +628,16 @@ module Readability
           end
           resolved.to_s
         rescue URI::InvalidURIError, URI::InvalidComponentError, URI::BadURIError
-          uri
+          # URI.join failed — try manual resolution as a relative path
+          begin
+            base = URI.parse(base_uri)
+            # Remove filename from base path to get directory
+            base_dir = base.path.sub(%r{/[^/]*\z}, "/")
+            base.path = base_dir + uri
+            base.to_s
+          rescue
+            uri
+          end
         end
       end
 
@@ -616,7 +646,7 @@ module Readability
         href = link["href"]
         next unless href
 
-        if href.start_with?("javascript:")
+        if href.strip.start_with?("javascript:")
           # Replace javascript: links
           if link.children.length == 1 && link.children[0].text?
             text_node = Nokogiri::XML::Text.new(link.text, @doc)
