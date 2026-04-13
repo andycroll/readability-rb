@@ -72,7 +72,7 @@ module Readability
 
       # If we haven't found an excerpt in the article's metadata, use the article's
       # first paragraph as the excerpt.
-      unless metadata["excerpt"]
+      if !metadata["excerpt"] || metadata["excerpt"].empty?
         paragraphs = article_content.css("p")
         if paragraphs.length > 0
           metadata["excerpt"] = paragraphs[0].text.strip
@@ -83,7 +83,7 @@ module Readability
 
       Result.new(
         title: @article_title,
-        byline: metadata["byline"] || @article_byline,
+        byline: (metadata["byline"] && !metadata["byline"].empty? ? metadata["byline"] : nil) || @article_byline,
         dir: @article_dir,
         lang: @article_lang,
         content: @serializer.call(article_content),
@@ -146,7 +146,7 @@ module Readability
           end
 
           # Check for byline
-          if !@article_byline && !@metadata["byline"] && is_valid_byline?(node, match_string)
+          if !@article_byline && (@metadata["byline"].nil? || @metadata["byline"].empty?) && is_valid_byline?(node, match_string)
             # Find child node matching [itemprop="name"] for more accurate author name
             end_of_search_marker_node = get_next_node(node, true)
             nxt = get_next_node(node)
