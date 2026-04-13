@@ -603,21 +603,14 @@ module Readability
         # Leave hash links alone if base URI matches document URI
         return uri if base_uri == document_uri && uri.start_with?("#")
 
-        begin
-          # If URI already has a non-HTTP scheme, return it (possibly normalized)
-          # (e.g. mailto:, tel:, data:, etc.) — URI.join mangles these
-          # Only check well-formed URIs; malformed ones should fall through to URI.join
-          parsed = URI.parse(uri)
-          if parsed.scheme && !%w[http https].include?(parsed.scheme.downcase)
-            # Normalize Windows drive letters in file: URIs (C| -> C:) per WHATWG URL spec
-            if parsed.scheme == "file"
-              return uri.sub(%r{\A(file:///[A-Za-z])\|(/)}i, '\1:\2')
-            end
-            return uri
+        # Quick check for non-HTTP scheme URIs before parsing — return as-is
+        # (with file: URL normalization for Windows drive letters)
+        if uri.match?(/\A[a-z][a-z0-9+\-.]*:/i) && !uri.match?(/\Ahttps?:/i)
+          # Normalize Windows drive letters in file: URIs (C| -> C:) per WHATWG URL spec
+          if uri.match?(/\Afile:/i)
+            return uri.sub(%r{\A(file:///[A-Za-z])\|(/)}i, '\1:\2')
           end
-        rescue URI::InvalidURIError, URI::InvalidComponentError, URI::BadURIError
-          # Couldn't parse — might be a relative URI with special chars
-          # Fall through to URI.join which may handle it
+          return uri
         end
 
         begin

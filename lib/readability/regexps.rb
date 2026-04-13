@@ -64,7 +64,7 @@ module Readability
 
   AD_WORDS = /\A(ad(vertising|vertisement)?|pub(licité)?|werb(ung)?|广告|Реклама|Anuncio)\z/iu
 
-  LOADING_WORDS = /\A((loading|正在加载|Загрузка|chargement|cargando)(…|\.\.\.)?)?\z/iu
+  LOADING_WORDS = /\A(loading|正在加载|Загрузка|chargement|cargando)(…|\.\.\.)?\z/iu
 
   # Element/role lists — ALL LOWERCASE
   UNLIKELY_ROLES = %w[menu menubar complementary navigation alert alertdialog dialog].freeze
