@@ -6,6 +6,8 @@ require "uri"
 
 require_relative "readability/version"
 require_relative "readability/result"
+require_relative "readability/regexps"
+require_relative "readability/utils"
 
 module Readability
   def self.parse(html, url: nil, **options)
