@@ -1,7 +1,7 @@
 ---
 title: "refactor: Performance optimization pass"
 type: refactor
-status: active
+status: completed
 date: 2026-04-13
 ---
 
