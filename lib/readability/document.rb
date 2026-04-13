@@ -119,6 +119,7 @@ module Readability
 
       # Preserve the lang attribute from the HTML element before any retry re-parsing
       preserved_article_lang = @doc.root && @doc.root["lang"]
+      preserved_article_dir = @doc.root && @doc.root["dir"]
 
       while true
         log("Starting grabArticle loop")
@@ -528,6 +529,8 @@ module Readability
 
             # Re-parse the best attempt from serialized HTML
             best_doc = Nokogiri::HTML5("<html><body>#{@attempts[0][:html]}</body></html>")
+            best_doc.root["lang"] = preserved_article_lang if preserved_article_lang
+            best_doc.root["dir"] = preserved_article_dir if preserved_article_dir
             article_content = best_doc.at_css("body")
             @doc = best_doc
             parse_successful = true
@@ -538,6 +541,7 @@ module Readability
             @doc = Nokogiri::HTML5("<html><head></head><body>#{@prepped_body_html}</body></html>")
             # Restore the lang attribute on the new HTML element so it's picked up during traversal
             @doc.root["lang"] = preserved_article_lang if preserved_article_lang
+            @doc.root["dir"] = preserved_article_dir if preserved_article_dir
             page = @doc.at_css("body")
 
             # Clear node-referencing instance variables since they point to the old document
