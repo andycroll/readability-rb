@@ -600,7 +600,12 @@ module Readability
         return uri if base_uri == document_uri && uri.start_with?("#")
 
         begin
-          URI.join(base_uri, uri).to_s
+          resolved = URI.join(base_uri, uri)
+          # Match JS URL normalization: add trailing slash for scheme-based URLs with empty path
+          if resolved.is_a?(URI::HTTP) && (resolved.path.nil? || resolved.path.empty?)
+            resolved.path = "/"
+          end
+          resolved.to_s
         rescue URI::InvalidURIError, URI::InvalidComponentError, URI::BadURIError
           uri
         end
