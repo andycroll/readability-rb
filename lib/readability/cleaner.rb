@@ -574,6 +574,11 @@ module Readability
       simplify_nested_elements(article_content)
 
       clean_classes(article_content) unless @keep_classes
+
+      # Remove HTML comments — JS innerHTML in the test environment excludes them
+      article_content.traverse do |node|
+        node.unlink if node.comment?
+      end
     end
 
     # Port of _fixRelativeUris (JS line 457-536)
