@@ -41,32 +41,35 @@ def sorted_attributes(node)
     .sort_by(&:first)
 end
 
+# Walk up to find a node with a next sibling, stopping at Document boundary
+def walk_up_for_sibling(node)
+  current = node
+  while current && current.respond_to?(:parent) && current.parent && !current.is_a?(Nokogiri::XML::Document) && !current.next_sibling
+    current = current.parent
+  end
+  (current && !current.is_a?(Nokogiri::XML::Document)) ? current.next_sibling : nil
+end
+
 # In-order DOM traversal, skipping whitespace-only text nodes
 def next_significant_node(node)
   # Try first child
   candidate = if node.element? && node.children.any?
     node.children.first
   else
-    # Try next sibling, or walk up to find one
-    current = node
-    while current && !current.next_sibling
-      current = current.parent
+    if node.next_sibling
+      node.next_sibling
+    else
+      walk_up_for_sibling(node)
     end
-    current&.next_sibling
   end
 
   # Skip whitespace-only text nodes
   while candidate && candidate.text? && candidate.text.strip.empty?
-    next_candidate = if candidate.next_sibling
+    candidate = if candidate.next_sibling
       candidate.next_sibling
     else
-      current = candidate
-      while current && !current.next_sibling
-        current = current.parent
-      end
-      current&.next_sibling
+      walk_up_for_sibling(candidate)
     end
-    candidate = next_candidate
   end
 
   candidate
