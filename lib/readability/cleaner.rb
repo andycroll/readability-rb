@@ -141,7 +141,7 @@ module Readability
           end
         end
 
-        prev_element.replace(tmp.children.first)
+        prev_element.replace(tmp.element_children.first)
       end
     end
 
@@ -342,10 +342,13 @@ module Readability
           end
         end
 
-        # Also check for "null" to work around jsdom issues
+        # Also check for "null" to work around jsdom issues.
+        # Note: In JS, empty string is falsy, so `elem.src = ""` does NOT
+        # prevent lazy-image processing. We must mirror that by treating
+        # empty-string src/srcset the same as absent.
         elem_src = elem["src"]
         elem_srcset = elem["srcset"]
-        if (elem_src || (elem_srcset && elem_srcset != "null")) &&
+        if (elem_src && !elem_src.empty? || (elem_srcset && elem_srcset != "null" && !elem_srcset.empty?)) &&
             !(elem["class"] || "").downcase.include?("lazy")
           next
         end

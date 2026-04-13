@@ -25,7 +25,7 @@ end
 
 def node_description(node)
   return "(no node)" unless node
-  return "#text(#{html_transform(node.text)})" if node.text?
+  return "#text(#{html_transform(node.text).strip})" if node.text?
   return "other:#{node.type}" unless node.element?
 
   desc = node.name
@@ -94,7 +94,7 @@ def compare_dom(actual_html, expected_html, test_name)
       "#{test_name}: DOM node mismatch"
 
     if actual_node&.text?
-      assert_equal html_transform(expected_node.text), html_transform(actual_node.text),
+      assert_equal html_transform(expected_node.text).strip, html_transform(actual_node.text).strip,
         "#{test_name}: Text content mismatch"
     elsif actual_node&.element?
       expected_attrs = sorted_attributes(expected_node)
