@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.description = "Ruby port of Mozilla Readability.js - extracts the main content from web pages, like Firefox Reader View"
   spec.homepage = "https://github.com/andycroll/readability-rb"
   spec.license = "Apache-2.0"
-  spec.required_ruby_version = ">= 3.1"
+  spec.required_ruby_version = ">= 3.2"
 
   spec.metadata = {
     "homepage_uri" => spec.homepage,
