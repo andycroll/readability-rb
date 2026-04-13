@@ -8,6 +8,7 @@ require_relative "readability/version"
 require_relative "readability/result"
 require_relative "readability/regexps"
 require_relative "readability/utils"
+require_relative "readability/scoring"
 
 module Readability
   def self.parse(html, url: nil, **options)
