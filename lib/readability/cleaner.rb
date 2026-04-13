@@ -16,6 +16,10 @@ module Readability
       # Remove all style tags
       remove_nodes(get_all_nodes_with_tag(@doc, ["style"]))
 
+      # Remove HTML comments — they interfere with phrasing content wrapping
+      # and are not present in the JS test expected output
+      @doc.traverse { |node| node.unlink if node.comment? }
+
       body = @doc.at_css("body")
       replace_brs(body) if body
 
@@ -574,11 +578,6 @@ module Readability
       simplify_nested_elements(article_content)
 
       clean_classes(article_content) unless @keep_classes
-
-      # Remove HTML comments — JS innerHTML in the test environment excludes them
-      article_content.traverse do |node|
-        node.unlink if node.comment?
-      end
     end
 
     # Port of _fixRelativeUris (JS line 457-536)
