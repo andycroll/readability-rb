@@ -7,3 +7,8 @@ Rake::TestTask.new(:test) do |t|
 end
 
 task default: :test
+
+desc "Run benchmarks"
+task :benchmark do
+  ruby "benchmark/parse_benchmark.rb"
+end
