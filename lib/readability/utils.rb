@@ -132,8 +132,9 @@ module Readability
       # And finally, move up the parent chain *and* find a sibling
       current = node
       loop do
+        break unless current.respond_to?(:parent) && current.parent
         current = current.parent
-        break unless current && !current.next_element
+        break if current.next_element
       end
       current&.next_element
     end

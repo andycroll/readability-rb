@@ -11,11 +11,12 @@ require_relative "readability/utils"
 require_relative "readability/scoring"
 require_relative "readability/metadata"
 require_relative "readability/cleaner"
+require_relative "readability/document"
 
 module Readability
   def self.parse(html, url: nil, **options)
-    # Stub — will be implemented in later tasks
-    nil
+    doc = Nokogiri::HTML5(html)
+    Document.new(doc, url: url, **options).parse
   end
 
   def self.readerable?(html, **options)
