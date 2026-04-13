@@ -615,9 +615,14 @@ module Readability
 
         begin
           resolved = URI.join(base_uri, uri)
-          # Match JS URL normalization: add trailing slash for scheme-based URLs with empty path
-          if resolved.is_a?(URI::HTTP) && (resolved.path.nil? || resolved.path.empty?)
-            resolved.path = "/"
+          # Match JS URL normalization
+          if resolved.is_a?(URI::HTTP)
+            # Add trailing slash for scheme-based URLs with empty path
+            if resolved.path.nil? || resolved.path.empty?
+              resolved.path = "/"
+            end
+            # Lowercase hostname (JS new URL() does this per WHATWG URL spec)
+            resolved.host = resolved.host.downcase if resolved.host
           end
           resolved.to_s
         rescue URI::InvalidURIError, URI::InvalidComponentError, URI::BadURIError
