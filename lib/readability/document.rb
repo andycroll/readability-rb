@@ -42,9 +42,14 @@ module Readability
     def parse
       # Avoid parsing too large documents
       if @max_elems_to_parse > 0
-        num_tags = @doc.css("*").length
-        if num_tags > @max_elems_to_parse
-          raise "Aborting parsing document; #{num_tags} elements found"
+        count = 0
+        @doc.traverse do |n|
+          if n.element?
+            count += 1
+            if count > @max_elems_to_parse
+              raise "Aborting parsing document; #{count} elements found"
+            end
+          end
         end
       end
 
@@ -58,6 +63,9 @@ module Readability
       remove_scripts(@doc)
 
       prep_document
+
+      # Cache the prepped body HTML for retry re-parsing (avoids innerHTML= cost)
+      @prepped_body_html = @doc.at_css("body")&.inner_html
 
       metadata = get_article_metadata(json_ld)
       @metadata = metadata
@@ -109,7 +117,8 @@ module Readability
         return nil
       end
 
-      page_cache_html = page.inner_html
+      # Preserve the lang attribute from the HTML element before any retry re-parsing
+      preserved_article_lang = @doc.root && @doc.root["lang"]
 
       while true
         log("Starting grabArticle loop")
@@ -497,10 +506,10 @@ module Readability
         text_length = get_inner_text(article_content, true).length
         if text_length < @char_threshold
           parse_successful = false
-          page.inner_html = page_cache_html
 
+          # Store serialized HTML instead of node references to avoid pinning old documents
           @attempts << {
-            article_content: article_content,
+            html: article_content.inner_html,
             text_length: text_length
           }
 
@@ -517,8 +526,26 @@ module Readability
             # But first check if we actually have something
             return nil if @attempts[0][:text_length] == 0
 
-            article_content = @attempts[0][:article_content]
+            # Re-parse the best attempt from serialized HTML
+            best_doc = Nokogiri::HTML5("<html><body>#{@attempts[0][:html]}</body></html>")
+            article_content = best_doc.at_css("body")
+            @doc = best_doc
             parse_successful = true
+          end
+
+          unless parse_successful
+            # Create a fresh document from the prepped body HTML, allowing the old one to be GC'd
+            @doc = Nokogiri::HTML5("<html><head></head><body>#{@prepped_body_html}</body></html>")
+            # Restore the lang attribute on the new HTML element so it's picked up during traversal
+            @doc.root["lang"] = preserved_article_lang if preserved_article_lang
+            page = @doc.at_css("body")
+
+            # Clear node-referencing instance variables since they point to the old document
+            @candidates = {}
+            @data_tables = Set.new
+            @article_byline = nil
+            @article_dir = nil
+            @article_lang = preserved_article_lang
           end
         end
 
