@@ -578,12 +578,26 @@ module Readability
 
     # Port of _fixRelativeUris (JS line 457-536)
     def fix_relative_uris(article_content)
-      base_uri = @url
-      return unless base_uri
+      document_uri = @url
+      return unless document_uri
+
+      # Compute the effective base URI, considering <base> elements (like JS document.baseURI)
+      base_uri = document_uri
+      base_element = @doc.at_css("base[href]")
+      if base_element
+        base_href = base_element["href"]
+        if base_href && !base_href.empty?
+          begin
+            base_uri = URI.join(document_uri, base_href).to_s
+          rescue URI::InvalidURIError, URI::InvalidComponentError, URI::BadURIError
+            # keep document_uri as base
+          end
+        end
+      end
 
       to_absolute_uri = lambda do |uri|
-        # Leave hash links alone if they start with #
-        return uri if uri.start_with?("#")
+        # Leave hash links alone if base URI matches document URI
+        return uri if base_uri == document_uri && uri.start_with?("#")
 
         begin
           URI.join(base_uri, uri).to_s

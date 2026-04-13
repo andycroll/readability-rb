@@ -63,8 +63,8 @@ def next_significant_node(node)
     end
   end
 
-  # Skip whitespace-only text nodes
-  while candidate && candidate.text? && candidate.text.strip.empty?
+  # Skip whitespace-only text nodes and comment nodes
+  while candidate && (candidate.comment? || (candidate.text? && candidate.text.strip.empty?))
     candidate = if candidate.next_sibling
       candidate.next_sibling
     else
