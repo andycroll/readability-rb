@@ -32,16 +32,23 @@ module Readability
       node.css(tag_names.join(","))
     end
 
+    # JS-compatible trim that also strips Unicode whitespace like \u00A0 (NBSP)
+    # JS's String.prototype.trim() strips all Unicode whitespace including NBSP.
+    # Ruby's String#strip only removes ASCII whitespace.
+    def js_trim(str)
+      str.gsub(/\A[\s\u00A0]+|[\s\u00A0]+\z/, "")
+    end
+
     # Port of _getInnerText (JS line 2084)
     def get_inner_text(element, normalize_spaces = true)
-      text = element.text.strip
+      text = js_trim(element.text)
       text = text.gsub(NORMALIZE, " ") if normalize_spaces
       text
     end
 
     # Port of _isWhitespace (JS line 2068)
     def is_whitespace?(node)
-      (node.text? && node.text.strip.empty?) ||
+      (node.text? && js_trim(node.text).empty?) ||
         (node.element? && node.name == "br")
     end
 
@@ -66,7 +73,7 @@ module Readability
     # Port of _isElementWithoutContent (JS line 2028)
     def is_element_without_content?(node)
       node.element? &&
-        node.text.strip.empty? &&
+        js_trim(node.text).empty? &&
         (node.element_children.empty? ||
           node.element_children.length ==
             node.css("br").length + node.css("hr").length)
@@ -183,7 +190,7 @@ module Readability
       current = node
       while current
         return true if current.name == "img"
-        return false if current.element_children.length != 1 || !current.text.strip.empty?
+        return false if current.element_children.length != 1 || !js_trim(current.text).empty?
 
         current = current.element_children[0]
       end
@@ -194,7 +201,7 @@ module Readability
     def is_valid_byline?(node, match_string)
       rel = node["rel"]
       itemprop = node["itemprop"]
-      byline_text = node.text.strip
+      byline_text = js_trim(node.text)
 
       return false if byline_text.empty? || byline_text.length >= 100
 
