@@ -4,6 +4,7 @@
 # Usage: ruby script/release.rb [patch|minor|major]
 # Bumps the version, commits, tags, and pushes to trigger the release workflow.
 
+Dir.chdir(File.expand_path("..", __dir__))
 require_relative "../lib/readability/version"
 
 LEVEL = ARGV[0]
@@ -22,7 +23,7 @@ when "major" then major += 1; minor = 0; patch = 0
 end
 
 new_version = "#{major}.#{minor}.#{patch}"
-version_file = File.join(__dir__, "../lib/readability/version.rb")
+version_file = "lib/readability/version.rb"
 
 puts "#{current} → #{new_version}"
 
