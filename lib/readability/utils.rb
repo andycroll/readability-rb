@@ -76,7 +76,7 @@ module Readability
         js_trim(node.text).empty? &&
         (node.element_children.empty? ||
           node.element_children.length ==
-            node.css("br").length + node.css("hr").length)
+            node.css("br, hr").length)
     end
 
     # Port of _hasChildBlockElement (JS line 2044)

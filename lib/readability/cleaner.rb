@@ -447,11 +447,15 @@ module Readability
           next true
         end
 
-        if get_char_count(node, ",") < 10
-          p_count = node.css("p").length
-          img_count = node.css("img").length
-          li_count = node.css("li").length - 100
-          input_count = node.css("input").length
+        inner_text = get_inner_text(node)
+
+        if inner_text.split(COMMAS).length - 1 < 10
+          tag_counts = Hash.new(0)
+          node.css("p, img, li, input").each { |n| tag_counts[n.name] += 1 }
+          p_count = tag_counts["p"]
+          img_count = tag_counts["img"]
+          li_count = tag_counts["li"] - 100
+          input_count = tag_counts["input"]
           heading_density = get_text_density(node, ["h1", "h2", "h3", "h4", "h5", "h6"])
 
           embed_count = 0
@@ -477,15 +481,13 @@ module Readability
           end
           next false if skip_removal
 
-          inner_text = get_inner_text(node)
-
           # Toss any node whose inner text contains nothing but suspicious words
           if AD_WORDS.match?(inner_text) || LOADING_WORDS.match?(inner_text)
             next true
           end
 
           content_length = inner_text.length
-          link_density = get_link_density(node)
+          link_density = get_link_density(node, text_length: content_length)
           textish_tags = %w[span li td] + DIV_TO_P_ELEMS.to_a
           text_density = get_text_density(node, textish_tags)
           is_figure_child = has_ancestor_tag?(node, "figure")

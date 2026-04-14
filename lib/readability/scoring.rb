@@ -50,8 +50,8 @@ module Readability
     # Port of _getLinkDensity (JS line 2143)
     # Returns the ratio of anchor text length to total text length.
     # Fragment-only links (#...) count at 0.3 coefficient.
-    def get_link_density(element)
-      text_length = get_inner_text(element).length
+    def get_link_density(element, text_length: nil)
+      text_length ||= get_inner_text(element).length
       return 0 if text_length == 0
 
       link_length = 0.0
