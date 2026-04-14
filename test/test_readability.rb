@@ -14,6 +14,14 @@ class TestReadability < Minitest::Test
     )
   end
 
+  def assert_metadata_equal(expected, actual, msg)
+    if expected.nil?
+      assert_nil actual, msg
+    else
+      assert_equal expected, actual, msg
+    end
+  end
+
   FIXTURES.each do |fixture|
     dir = fixture[:dir]
     # Sanitize dir name for method names (replace hyphens with underscores)
@@ -33,25 +41,25 @@ class TestReadability < Minitest::Test
     define_method("test_#{safe_dir}_extracts_title") do
       result = self.class.parse_result_for(fixture)
       skip "#{dir}: parse returned nil" if result.nil?
-      assert_equal fixture[:expected_metadata]["title"], result.title, "#{dir}: title"
+      assert_metadata_equal fixture[:expected_metadata]["title"], result.title, "#{dir}: title"
     end
 
     define_method("test_#{safe_dir}_extracts_byline") do
       result = self.class.parse_result_for(fixture)
       skip "#{dir}: parse returned nil" if result.nil?
-      assert_equal fixture[:expected_metadata]["byline"], result.byline, "#{dir}: byline"
+      assert_metadata_equal fixture[:expected_metadata]["byline"], result.byline, "#{dir}: byline"
     end
 
     define_method("test_#{safe_dir}_extracts_excerpt") do
       result = self.class.parse_result_for(fixture)
       skip "#{dir}: parse returned nil" if result.nil?
-      assert_equal fixture[:expected_metadata]["excerpt"], result.excerpt, "#{dir}: excerpt"
+      assert_metadata_equal fixture[:expected_metadata]["excerpt"], result.excerpt, "#{dir}: excerpt"
     end
 
     define_method("test_#{safe_dir}_extracts_site_name") do
       result = self.class.parse_result_for(fixture)
       skip "#{dir}: parse returned nil" if result.nil?
-      assert_equal fixture[:expected_metadata]["siteName"], result.site_name, "#{dir}: site_name"
+      assert_metadata_equal fixture[:expected_metadata]["siteName"], result.site_name, "#{dir}: site_name"
     end
 
     if fixture[:expected_metadata]["dir"]
