@@ -41,7 +41,7 @@ module Readability
 
           if parsed.is_a?(Array)
             parsed = parsed.find do |it|
-              it["@type"] && it["@type"].match?(JSON_LD_ARTICLE_TYPES)
+              Array(it["@type"]).any? { |t| t.match?(JSON_LD_ARTICLE_TYPES) }
             end
             next unless parsed
           end
@@ -58,11 +58,13 @@ module Readability
 
           if !parsed["@type"] && parsed["@graph"].is_a?(Array)
             parsed = parsed["@graph"].find do |it|
-              (it["@type"] || "").match?(JSON_LD_ARTICLE_TYPES)
+              next unless it.is_a?(Hash)
+
+              Array(it["@type"]).any? { |t| t.is_a?(String) && t.match?(JSON_LD_ARTICLE_TYPES) }
             end
           end
 
-          next if !parsed || !parsed["@type"] || !parsed["@type"].match?(JSON_LD_ARTICLE_TYPES)
+          next if !parsed || !parsed["@type"] || !Array(parsed["@type"]).any? { |t| t.is_a?(String) && t.match?(JSON_LD_ARTICLE_TYPES) }
 
           metadata = {}
 
