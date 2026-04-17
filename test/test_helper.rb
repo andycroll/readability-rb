@@ -82,8 +82,8 @@ def next_significant_node(node)
 end
 
 def compare_dom(actual_html, expected_html, test_name)
-  actual_doc = Nokogiri::HTML5(actual_html)
-  expected_doc = Nokogiri::HTML5(expected_html)
+  actual_doc = Nokogiri::HTML5(actual_html, max_tree_depth: Readability::DEFAULT_MAX_TREE_DEPTH)
+  expected_doc = Nokogiri::HTML5(expected_html, max_tree_depth: Readability::DEFAULT_MAX_TREE_DEPTH)
 
   # Start from the body's first element child (the readability wrapper div)
   actual_body = actual_doc.at_css("body")

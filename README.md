@@ -93,6 +93,7 @@ result = Readability.parse(html, serializer: ->(el) { el.to_html })
 | `link_density_modifier` | Adjust link density calculation | `0` |
 | `serializer` | Lambda to serialize the content element | `inner_html` |
 | `max_attributes` | Max attributes per element at parse time | `1000` |
+| `max_tree_depth` | Max document tree depth at parse time (`-1` to disable) | `1000` |
 
 ## Contributing
 

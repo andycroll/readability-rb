@@ -16,14 +16,15 @@ require_relative "readability/readerable"
 
 module Readability
   DEFAULT_MAX_ATTRIBUTES = 1000
+  DEFAULT_MAX_TREE_DEPTH = 1000
 
-  def self.parse(html, url: nil, max_attributes: DEFAULT_MAX_ATTRIBUTES, **options)
-    doc = Nokogiri::HTML5(html, max_attributes: max_attributes)
+  def self.parse(html, url: nil, max_attributes: DEFAULT_MAX_ATTRIBUTES, max_tree_depth: DEFAULT_MAX_TREE_DEPTH, **options)
+    doc = Nokogiri::HTML5(html, max_attributes: max_attributes, max_tree_depth: max_tree_depth)
     Document.new(doc, url: url, **options).parse
   end
 
-  def self.readerable?(html, max_attributes: DEFAULT_MAX_ATTRIBUTES, **options)
-    doc = Nokogiri::HTML5(html, max_attributes: max_attributes)
+  def self.readerable?(html, max_attributes: DEFAULT_MAX_ATTRIBUTES, max_tree_depth: DEFAULT_MAX_TREE_DEPTH, **options)
+    doc = Nokogiri::HTML5(html, max_attributes: max_attributes, max_tree_depth: max_tree_depth)
     Readerable.probably_readerable?(doc, **options)
   end
 end
