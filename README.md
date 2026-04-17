@@ -92,6 +92,7 @@ result = Readability.parse(html, serializer: ->(el) { el.to_html })
 | `allowed_video_regex` | Regex for allowed video embed URLs | built-in |
 | `link_density_modifier` | Adjust link density calculation | `0` |
 | `serializer` | Lambda to serialize the content element | `inner_html` |
+| `max_attributes` | Max attributes per element at parse time | `1000` |
 
 ## Contributing
 
