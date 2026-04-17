@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.metadata = {
     "homepage_uri" => spec.homepage,
     "source_code_uri" => "https://github.com/andycroll/readability-rb",
-    "changelog_uri" => "https://github.com/andycroll/readability-rb/commits/main",
+    "changelog_uri" => "https://github.com/andycroll/readability-rb/blob/main/CHANGELOG.md",
     "bug_tracker_uri" => "https://github.com/andycroll/readability-rb/issues",
   }
 
