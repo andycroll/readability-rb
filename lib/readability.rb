@@ -15,13 +15,15 @@ require_relative "readability/document"
 require_relative "readability/readerable"
 
 module Readability
-  def self.parse(html, url: nil, **options)
-    doc = Nokogiri::HTML5(html)
+  DEFAULT_MAX_ATTRIBUTES = 1000
+
+  def self.parse(html, url: nil, max_attributes: DEFAULT_MAX_ATTRIBUTES, **options)
+    doc = Nokogiri::HTML5(html, max_attributes: max_attributes)
     Document.new(doc, url: url, **options).parse
   end
 
-  def self.readerable?(html, **options)
-    doc = Nokogiri::HTML5(html)
+  def self.readerable?(html, max_attributes: DEFAULT_MAX_ATTRIBUTES, **options)
+    doc = Nokogiri::HTML5(html, max_attributes: max_attributes)
     Readerable.probably_readerable?(doc, **options)
   end
 end

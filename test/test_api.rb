@@ -89,6 +89,21 @@ class TestAPI < Minitest::Test
     assert_nil result
   end
 
+  def test_max_attributes_kwarg_raises_when_exceeded
+    junk = (1..80).map { |i| "a#{i}=b" }.join(" ")
+    html = "<html><head><meta #{junk}></head>" \
+           "<body><p>#{"hello world. " * 100}</p></body></html>"
+    assert_raises(ArgumentError) { Readability.parse(html, max_attributes: 50) }
+  end
+
+  def test_max_attributes_kwarg_allows_higher_limit
+    junk = (1..80).map { |i| "a#{i}=b" }.join(" ")
+    html = "<html><head><meta #{junk}></head>" \
+           "<body><p>#{"hello world. " * 100}</p></body></html>"
+    result = Readability.parse(html, max_attributes: 200)
+    refute_nil result
+  end
+
   def test_document_accepts_nokogiri_doc
     doc = Nokogiri::HTML5("<html><body><p>#{"Test content. " * 100}</p></body></html>")
     result = Readability::Document.new(doc).parse

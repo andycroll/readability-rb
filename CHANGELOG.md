@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Add `max_attributes` kwarg to `Readability.parse` and `Readability.readerable?` for configuring the per-element attribute limit at parse time (default `1000`)
+
 ## 0.4.0 (2026-04-17)
 
 - Handle JSON-LD objects with multiple `@type` values (#10)
