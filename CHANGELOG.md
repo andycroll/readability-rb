@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.5.0 (2026-04-17)
+
 - Add `max_attributes` kwarg to `Readability.parse` and `Readability.readerable?` for configuring the per-element attribute limit at parse time (default `1000`)
 - Add `max_tree_depth` kwarg to `Readability.parse` and `Readability.readerable?` for configuring the document tree depth limit at parse time (default `1000`, `-1` to disable)
 
