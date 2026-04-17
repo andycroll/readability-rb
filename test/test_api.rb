@@ -104,6 +104,17 @@ class TestAPI < Minitest::Test
     refute_nil result
   end
 
+  def test_max_tree_depth_kwarg_raises_when_exceeded
+    html = "<html><body>#{"<div>" * 60}<p>hello</p>#{"</div>" * 60}</body></html>"
+    assert_raises(ArgumentError) { Readability.parse(html, max_tree_depth: 50) }
+  end
+
+  def test_max_tree_depth_kwarg_allows_higher_limit
+    html = "<html><body>#{"<div>" * 60}<p>#{"hello world. " * 100}</p>#{"</div>" * 60}</body></html>"
+    result = Readability.parse(html, max_tree_depth: 200)
+    refute_nil result
+  end
+
   def test_document_accepts_nokogiri_doc
     doc = Nokogiri::HTML5("<html><body><p>#{"Test content. " * 100}</p></body></html>")
     result = Readability::Document.new(doc).parse
