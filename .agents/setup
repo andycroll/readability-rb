@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+step() {
+  printf '\n==> %s\n' "$1"
+}
+
+step "Install mise"
+if ! command -v mise >/dev/null 2>&1; then
+  curl -fsSL https://mise.run | sh
+fi
+
+export PATH="$HOME/.local/bin:$PATH"
+
+step "Configure Ruby toolchain"
+mise settings add idiomatic_version_file_enable_tools ruby >/dev/null
+
+profile_marker="# readability-rb mise activation"
+if ! grep -Fqx "$profile_marker" "$HOME/.bash_profile" 2>/dev/null; then
+  cat >> "$HOME/.bash_profile" <<'EOF'
+
+# readability-rb mise activation
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi
+EOF
+fi
+
+time mise install ruby
+
+step "Install gem dependencies"
+time mise exec -- bundle install
+
+step "Verify toolchain"
+mise exec -- ruby --version
+mise exec -- bundle --version
