@@ -4,4 +4,4 @@ gemspec
 gem "benchmark-ips"
 gem "minitest", "~> 6.0"
 gem "rake"
-gem "simplecov", "~> 0.22", require: false
+gem "simplecov", require: false
