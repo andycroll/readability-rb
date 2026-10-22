@@ -41,7 +41,7 @@ module Readability
 
           if parsed.is_a?(Array)
             parsed = parsed.find do |it|
-              Array(it["@type"]).any? { |t| t.match?(JSON_LD_ARTICLE_TYPES) }
+              Array(it["@type"]).any? { |t| t.is_a?(String) && t.match?(JSON_LD_ARTICLE_TYPES) }
             end
             next unless parsed
           end
@@ -64,6 +64,8 @@ module Readability
             end
           end
 
+          # Unlike JS, accept an array @type, which schema.org allows. JS calls
+          # @type.match, which throws for an array, so it skips the script.
           next if !parsed || !parsed["@type"] || !Array(parsed["@type"]).any? { |t| t.is_a?(String) && t.match?(JSON_LD_ARTICLE_TYPES) }
 
           metadata = {}
@@ -88,13 +90,13 @@ module Readability
 
           if parsed["author"]
             if parsed["author"].is_a?(Hash) && parsed["author"]["name"].is_a?(String)
-              metadata["byline"] = parsed["author"]["name"].strip
+              metadata["byline"] = js_trim(parsed["author"]["name"])
             elsif parsed["author"].is_a?(Array) &&
-                parsed["author"][0] &&
+                parsed["author"][0].is_a?(Hash) &&
                 parsed["author"][0]["name"].is_a?(String)
               metadata["byline"] = parsed["author"]
-                .select { |author| author && author["name"].is_a?(String) }
-                .map { |author| author["name"].strip }
+                .select { |author| author.is_a?(Hash) && author["name"].is_a?(String) }
+                .map { |author| js_trim(author["name"]) }
                 .join(", ")
             end
           end
@@ -110,8 +112,8 @@ module Readability
           if parsed["datePublished"].is_a?(String)
             metadata["date_published"] = parsed["datePublished"].strip
           end
-        rescue JSON::ParserError => e
-          # Handle malformed JSON gracefully
+        rescue => e
+          # Skip malformed JSON or JSON with an unexpected shape, as JS does
           log(e.message) if respond_to?(:log, true)
         end
       end
@@ -225,7 +227,7 @@ module Readability
           if matches
             # Convert to lowercase, and remove any whitespace
             name = matches[0].downcase.gsub(/\s/, "")
-            values[name] = content.strip
+            values[name] = js_trim(content)
           end
         end
 
@@ -234,7 +236,7 @@ module Readability
           if content
             # Convert to lowercase, remove whitespace, convert dots to colons
             name = name.downcase.gsub(/\s/, "").gsub(".", ":")
-            values[name] = content.strip
+            values[name] = js_trim(content)
           end
         end
       end

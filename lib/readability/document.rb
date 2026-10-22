@@ -170,7 +170,7 @@ module Readability
                 nxt = get_next_node(nxt)
               end
             end
-            @article_byline = (item_prop_name_node || node).text.strip
+            @article_byline = js_trim((item_prop_name_node || node).text)
             node = remove_and_get_next(node)
             next
           end

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Skip JSON-LD scripts with an unexpected shape, such as `null`, instead of raising an error
+- Ignore JSON-LD authors that are not objects (`"author": ["Hannah Surname"]` gave the byline `"name"`)
+- Trim Unicode whitespace, such as non-breaking spaces, from bylines
+- Ignore `article:author` values with any URL scheme, such as `mailto:`, not only HTTP and HTTPS
+
 ## 0.5.0 (2026-04-17)
 
 - Add `max_attributes` kwarg to `Readability.parse` and `Readability.readerable?` for configuring the per-element attribute limit at parse time (default `1000`)
