@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.6.0 (2026-10-22)
+
+- Require Ruby 3.3 or later
 - Skip JSON-LD scripts with an unexpected shape, such as `null`, instead of raising an error
 - Ignore JSON-LD authors that are not objects (`"author": ["Hannah Surname"]` gave the byline `"name"`)
 - Trim Unicode whitespace, such as non-breaking spaces, from bylines
