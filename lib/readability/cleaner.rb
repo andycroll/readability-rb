@@ -449,7 +449,7 @@ module Readability
 
         inner_text = get_inner_text(node)
 
-        if inner_text.split(COMMAS).length - 1 < 10
+        if inner_text.count(",") < 10
           tag_counts = Hash.new(0)
           node.css("p, img, li, input").each { |n| tag_counts[n.name] += 1 }
           p_count = tag_counts["p"]

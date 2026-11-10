@@ -121,4 +121,29 @@ class TestAPI < Minitest::Test
     refute_nil result
     assert_kind_of Readability::Result, result
   end
+
+  # Readability.js scores each paragraph with innerText.split(commas).length,
+  # which counts a trailing comma's empty field.
+  def test_paragraph_comma_score_counts_trailing_comma
+    trailing = "<p>Alpha alpha alpha alpha alpha alpha, beta beta beta,</p>" * 4
+    middle = "<p>Gamma gamma, delta delta, epsilon epsilon, zeta zeta.</p>" * 3
+    html = "<html><body><div><div><div>TRAILING #{trailing}</div></div></div>" \
+           "<div><div><div>MIDDLE #{middle}</div></div></div></body></html>"
+    content = Readability.parse(html).content
+    assert_includes content, "TRAILING"
+    refute_includes content, "MIDDLE"
+  end
+
+  # Readability.js cleans conditionally when _getCharCount(node, ",") < 10:
+  # ASCII commas only, trailing one included.
+  def test_clean_conditionally_counts_ascii_commas_including_trailing
+    paragraphs = "<p>#{"The quick brown fox jumps over the lazy dog. " * 3}</p>" * 6
+    ten_commas = (1..10).map { |i| "<a href='/a#{i}'>link #{i}</a>, " }.join
+    fullwidth = (1..12).map { |i| "<a href='/b#{i}'>链接#{i}</a>，" }.join
+    html = "<html><body><div>#{paragraphs}<div>TEN #{ten_commas}</div>" \
+           "<div>FULLWIDTH #{fullwidth}</div>#{paragraphs}</div></body></html>"
+    content = Readability.parse(html).content
+    assert_includes content, "TEN"
+    refute_includes content, "FULLWIDTH"
+  end
 end
