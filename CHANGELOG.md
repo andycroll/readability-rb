@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Count commas the way Readability.js does when scoring paragraphs and cleaning conditionally: trailing commas now count, and the conditional-clean check counts only ASCII commas (#16)
+
 ## 0.6.0 (2026-10-22)
 
 - Require Ruby 3.3 or later

@@ -290,7 +290,7 @@ module Readability
           content_score += 1
 
           # Add points for any commas within this paragraph.
-          content_score += inner_text.split(COMMAS).length
+          content_score += inner_text.split(COMMAS, -1).length
 
           # For every 100 characters in this paragraph, add another point. Up to 3 points.
           content_score += [inner_text.length / 100, 3].min
