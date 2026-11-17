@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Treat Unicode spaces, such as non-breaking spaces, as whitespace the way Readability.js does when cleaning titles and splitting `<br>` chains (`Headline&nbsp;|&nbsp;Site` now gives `Headline`)
+
 ## 0.7.0 (2026-11-11)
 
 - Count commas the way Readability.js does when scoring paragraphs and cleaning conditionally: trailing commas now count, and the conditional-clean check counts only ASCII commas (#16)
