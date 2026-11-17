@@ -124,9 +124,14 @@ class TestMetadata < Minitest::Test
       "Why the quick brown fox jumps&nbsp;- Example Site" => "Why the quick brown fox jumps",
       "Foo&nbsp;&nbsp;Bar Baz Qux Quux" => "Foo Bar Baz Qux Quux",
       "&nbsp;Short title&nbsp;" => "Short title",
+      "Foo Bar&nbsp;&nbsp;|&nbsp;&nbsp;Big Example News Site Name" => "Foo Bar\u00A0\u00A0|\u00A0\u00A0Big Example News Site Name",
     }.each do |title, expected|
       html = "<html><head><title>#{title}</title></head><body><article>#{BODY}#{BODY}</article></body></html>"
       assert_equal expected, Readability.parse(html).title, title
     end
+
+    title = "Foo: The quick brown fox jumps over"
+    html = "<html><head><title>#{title}</title></head><body><h1>&nbsp;#{title}&nbsp;</h1><article>#{BODY}#{BODY}</article></body></html>"
+    assert_equal title, Readability.parse(html).title
   end
 end

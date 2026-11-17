@@ -141,7 +141,7 @@ module Readability
 
       title_had_hierarchical_separators = false
       space = '[[:space:]\uFEFF]'
-      word_count = ->(str) { str.split(/#{space}+/).length }
+      word_count = ->(str) { str.split(/#{space}+/, -1).length }
 
       # Title separator characters — exact JS source string from line 597
       title_separators = '\|\-\u2013\u2014\\\\\/>»'
@@ -160,8 +160,8 @@ module Readability
       elsif cur_title.include?(": ")
         # Check if we have a heading containing this exact string
         headings = get_all_nodes_with_tag(@doc, ["h1", "h2"])
-        trimmed_title = cur_title.strip
-        match = headings.any? { |heading| heading.text.strip == trimmed_title }
+        trimmed_title = js_trim(cur_title)
+        match = headings.any? { |heading| js_trim(heading.text) == trimmed_title }
 
         # If we don't, extract the title out of the original title string
         unless match
