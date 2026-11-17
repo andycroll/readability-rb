@@ -146,4 +146,11 @@ class TestAPI < Minitest::Test
     assert_includes content, "TEN"
     refute_includes content, "FULLWIDTH"
   end
+
+  # Readability.js treats a text node of only NBSP as whitespace, so <br>&nbsp;<br> splits a paragraph.
+  def test_br_chain_with_nbsp_between_splits_paragraph
+    paragraphs = "<p>#{"The quick brown fox jumps over the lazy dog, again and again. " * 2}</p>" * 6
+    html = "<html><body><article><div>BEFORE<br>&nbsp;<br>AFTER #{paragraphs}</div></article></body></html>"
+    assert_includes Readability.parse(html).content, "<p>BEFORE</p>"
+  end
 end

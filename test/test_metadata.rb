@@ -116,4 +116,17 @@ class TestMetadata < Minitest::Test
     assert_equal "Jane Smith", parse(head: %(<meta name="author" content=" Jane Smith ">)).byline
     assert_equal "Jane Smith", parse(head: %(<meta property="article:author" content=" Jane Smith ">)).byline
   end
+
+  # Readability.js's \s and trim() match Unicode spaces such as NBSP; Ruby's \s and strip don't.
+  def test_title_treats_nbsp_as_whitespace
+    {
+      "Why the quick brown fox jumps&nbsp;|&nbsp;Example Site" => "Why the quick brown fox jumps",
+      "Why the quick brown fox jumps&nbsp;- Example Site" => "Why the quick brown fox jumps",
+      "Foo&nbsp;&nbsp;Bar Baz Qux Quux" => "Foo Bar Baz Qux Quux",
+      "&nbsp;Short title&nbsp;" => "Short title",
+    }.each do |title, expected|
+      html = "<html><head><title>#{title}</title></head><body><article>#{BODY}#{BODY}</article></body></html>"
+      assert_equal expected, Readability.parse(html).title, title
+    end
+  end
 end
