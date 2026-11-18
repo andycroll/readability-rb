@@ -33,7 +33,8 @@ module Readability
 
   REPLACE_FONTS = /<(\/?)font[^>]*>/i
 
-  NORMALIZE = /\s{2,}/
+  # JS \s matches Unicode spaces such as NBSP; Ruby's \s is ASCII-only.
+  NORMALIZE = /[[:space:]\uFEFF]{2,}/
 
   VIDEOS = /\/\/(www\.)?((dailymotion|youtube|youtube-nocookie|player\.vimeo|v\.qq|bilibili|live.bilibili)\.com|(archive|upload\.wikimedia)\.org|player\.twitch\.tv)/i
 
@@ -45,9 +46,9 @@ module Readability
 
   TOKENIZE = /\W+/
 
-  WHITESPACE = /\A\s*\z/
+  WHITESPACE = /\A[[:space:]\uFEFF]*\z/
 
-  HAS_CONTENT = /\S\z/
+  HAS_CONTENT = /[^[:space:]\uFEFF]\z/
 
   HASH_URL = /\A#.+/
 

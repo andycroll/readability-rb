@@ -128,7 +128,7 @@ module Readability
       orig_title = ""
 
       begin
-        cur_title = orig_title = (@doc.at_css("title")&.text&.strip || "")
+        cur_title = orig_title = js_trim(@doc.at_css("title")&.text || "")
 
         # If title came back as something other than a string (shouldn't happen
         # with Nokogiri, but match JS logic)
@@ -140,16 +140,17 @@ module Readability
       end
 
       title_had_hierarchical_separators = false
-      word_count = ->(str) { str.split(/\s+/).length }
+      space = '[[:space:]\uFEFF]'
+      word_count = ->(str) { str.split(/#{space}+/, -1).length }
 
       # Title separator characters — exact JS source string from line 597
       title_separators = '\|\-\u2013\u2014\\\\\/>»'
 
-      if cur_title.match?(/\s[#{title_separators}]\s/)
-        title_had_hierarchical_separators = cur_title.match?(/\s[\\\/>\u00BB]\s/)
+      if cur_title.match?(/#{space}[#{title_separators}]#{space}/)
+        title_had_hierarchical_separators = cur_title.match?(/#{space}[\\\/>\u00BB]#{space}/)
 
         # Find all separator positions and remove everything after the last one
-        all_separators = orig_title.to_enum(:scan, /\s[#{title_separators}]\s/i).map { Regexp.last_match }
+        all_separators = orig_title.to_enum(:scan, /#{space}[#{title_separators}]#{space}/i).map { Regexp.last_match }
         cur_title = orig_title[0, all_separators.last.begin(0)]
 
         # If the resulting title is too short, remove the first part instead
@@ -159,8 +160,8 @@ module Readability
       elsif cur_title.include?(": ")
         # Check if we have a heading containing this exact string
         headings = get_all_nodes_with_tag(@doc, ["h1", "h2"])
-        trimmed_title = cur_title.strip
-        match = headings.any? { |heading| heading.text.strip == trimmed_title }
+        trimmed_title = js_trim(cur_title)
+        match = headings.any? { |heading| js_trim(heading.text) == trimmed_title }
 
         # If we don't, extract the title out of the original title string
         unless match
@@ -182,7 +183,7 @@ module Readability
         end
       end
 
-      cur_title = cur_title.strip.gsub(NORMALIZE, " ")
+      cur_title = js_trim(cur_title).gsub(NORMALIZE, " ")
 
       # If we now have 4 words or fewer as our title, and either no
       # 'hierarchical' separators (\, /, > or ») were found in the original
@@ -192,7 +193,7 @@ module Readability
       if cur_title_word_count <= 4 &&
           (!title_had_hierarchical_separators ||
             cur_title_word_count !=
-              word_count.call(orig_title.gsub(/\s[#{title_separators}]\s/, "")) - 1)
+              word_count.call(orig_title.gsub(/#{space}[#{title_separators}]#{space}/, "")) - 1)
         cur_title = orig_title
       end
 
