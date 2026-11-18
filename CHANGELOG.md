@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.8.0 (2026-11-18)
+
 - Treat Unicode spaces, such as non-breaking spaces, as whitespace the way Readability.js does when cleaning titles and splitting `<br>` chains (`Headline&nbsp;|&nbsp;Site` now gives `Headline`)
 
 ## 0.7.0 (2026-11-11)
