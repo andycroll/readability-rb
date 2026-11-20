@@ -115,6 +115,15 @@ class TestAPI < Minitest::Test
     refute_nil result
   end
 
+  # Short text makes parse retry on a re-parsed copy, which must use the same limits.
+  def test_parse_limits_apply_when_retrying
+    deep = "<div>" * 410 + "hello world"
+    many_attributes = "<p #{(1..1050).map { |i| "a#{i}=b" }.join(" ")}>hello world</p>"
+
+    assert_equal "hello world", Readability.parse(deep).text_content
+    assert_equal "hello world", Readability.parse(many_attributes, max_attributes: 1100).text_content
+  end
+
   def test_document_accepts_nokogiri_doc
     doc = Nokogiri::HTML5("<html><body><p>#{"Test content. " * 100}</p></body></html>")
     result = Readability::Document.new(doc).parse
