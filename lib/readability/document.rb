@@ -33,8 +33,6 @@ module Readability
       @disable_json_ld = !!options[:disable_json_ld]
       @allowed_video_regex = options[:allowed_video_regex] || VIDEOS
       @link_density_modifier = options[:link_density_modifier] || 0
-      @max_attributes = options[:max_attributes] || DEFAULT_MAX_ATTRIBUTES
-      @max_tree_depth = options[:max_tree_depth] || DEFAULT_MAX_TREE_DEPTH
 
       # Flags — all active initially
       @flags = FLAG_STRIP_UNLIKELYS | FLAG_WEIGHT_CLASSES | FLAG_CLEAN_CONDITIONALLY
@@ -580,8 +578,10 @@ module Readability
       @flags = @flags & ~flag
     end
 
+    # The page already passed the caller's limits when it was first parsed. Re-parsing
+    # adds a few wrapper levels, so don't limit it again.
     def reparse(html)
-      Nokogiri::HTML5(html, max_attributes: @max_attributes, max_tree_depth: @max_tree_depth)
+      Nokogiri::HTML5(html, max_attributes: -1, max_tree_depth: -1)
     end
 
     def log(*args)
