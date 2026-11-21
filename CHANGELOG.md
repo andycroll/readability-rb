@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Stop `parse` raising `ArgumentError` when it retries on a re-parsed copy of a page that passed `max_attributes` and `max_tree_depth`. The retry used Nokogiri's default limit of 400, so short pages nested about 400 deep failed even under the default limit of 1000
+
 ## 0.8.0 (2026-11-18)
 
 - Treat Unicode spaces, such as non-breaking spaces, as whitespace the way Readability.js does when cleaning titles and splitting `<br>` chains (`Headline&nbsp;|&nbsp;Site` now gives `Headline`)

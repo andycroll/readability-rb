@@ -528,7 +528,7 @@ module Readability
             return nil if @attempts[0][:text_length] == 0
 
             # Re-parse the best attempt from serialized HTML
-            best_doc = Nokogiri::HTML5("<html><body>#{@attempts[0][:html]}</body></html>")
+            best_doc = reparse("<html><body>#{@attempts[0][:html]}</body></html>")
             best_doc.root["lang"] = preserved_article_lang if preserved_article_lang
             best_doc.root["dir"] = preserved_article_dir if preserved_article_dir
             article_content = best_doc.at_css("body")
@@ -538,7 +538,7 @@ module Readability
 
           unless parse_successful
             # Create a fresh document from the prepped body HTML, allowing the old one to be GC'd
-            @doc = Nokogiri::HTML5("<html><head></head><body>#{@prepped_body_html}</body></html>")
+            @doc = reparse("<html><head></head><body>#{@prepped_body_html}</body></html>")
             # Restore the lang attribute on the new HTML element so it's picked up during traversal
             @doc.root["lang"] = preserved_article_lang if preserved_article_lang
             @doc.root["dir"] = preserved_article_dir if preserved_article_dir
@@ -576,6 +576,12 @@ module Readability
 
     def remove_flag(flag)
       @flags = @flags & ~flag
+    end
+
+    # The page already passed the caller's limits when it was first parsed. Re-parsing
+    # adds a few wrapper levels, so don't limit it again.
+    def reparse(html)
+      Nokogiri::HTML5(html, max_attributes: -1, max_tree_depth: -1)
     end
 
     def log(*args)
