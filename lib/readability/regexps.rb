@@ -50,6 +50,8 @@ module Readability
 
   HAS_CONTENT = /[^[:space:]\uFEFF]\z/
 
+  NON_SPACE = /[^[:space:]\uFEFF]/
+
   HASH_URL = /\A#.+/
 
   SRCSET_URL = /(\S+)(\s+[\d.]+[xw])?(\s*(?:,|$))/
