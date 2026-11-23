@@ -52,6 +52,9 @@ module Readability
 
   NON_SPACE = /[^[:space:]\uFEFF]/
 
+  # The characters in NORMALIZE's class, as a String#tr_s character set
+  SPACE_CHARS = "\t\n\v\f\r \u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF"
+
   HASH_URL = /\A#.+/
 
   SRCSET_URL = /(\S+)(\s+[\d.]+[xw])?(\s*(?:,|$))/
@@ -74,13 +77,18 @@ module Readability
 
   DIV_TO_P_ELEMS = Set.new(%w[blockquote dl div img ol p pre table ul]).freeze
 
+  HEADING_TAGS = %w[h1 h2 h3 h4 h5 h6].freeze
+
+  # Tags whose text counts towards text density in _cleanConditionally
+  TEXTISH_TAGS = (%w[span li td] + DIV_TO_P_ELEMS.to_a).freeze
+
   ALTER_TO_DIV_EXCEPTIONS = %w[div article section p ol ul].freeze
 
   PRESENTATIONAL_ATTRIBUTES = %w[align background bgcolor border cellpadding cellspacing frame hspace rules style valign vspace].freeze
 
   DEPRECATED_SIZE_ATTRIBUTE_ELEMS = %w[table th td hr pre].freeze
 
-  PHRASING_ELEMS = %w[abbr audio b bdo br button cite code data datalist dfn em embed i img input kbd label mark math meter noscript object output progress q ruby samp script select small span strong sub sup textarea time var wbr].freeze
+  PHRASING_ELEMS = Set.new(%w[abbr audio b bdo br button cite code data datalist dfn em embed i img input kbd label mark math meter noscript object output progress q ruby samp script select small span strong sub sup textarea time var wbr]).freeze
 
   CLASSES_TO_PRESERVE = %w[page].freeze
 

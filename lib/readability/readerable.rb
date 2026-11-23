@@ -35,7 +35,8 @@ module Readability
 
         match_string = "#{node['class']} #{node['id']}"
         next false if UNLIKELY_CANDIDATES.match?(match_string) && !OK_MAYBE_CANDIDATE.match?(match_string)
-        next false if node.matches?("li p")
+        # Same as node.matches?("li p"), which searches the whole document for every node.
+        next false if node.name == "p" && node.ancestors.any? { |ancestor| ancestor.name == "li" }
 
         text_length = node.text.strip.length
         next false if text_length < min_content_length

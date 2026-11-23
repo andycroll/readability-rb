@@ -231,7 +231,7 @@ module Readability
         elem.remove_attribute("height")
       end
 
-      cur = elem.element_children.first
+      cur = elem.first_element_child
       while cur
         clean_styles(cur)
         cur = cur.next_element
@@ -265,8 +265,7 @@ module Readability
         end
 
         # If the table has a descendant with any of these tags, consider a data table
-        data_table_descendants = %w[col colgroup tfoot thead th]
-        if data_table_descendants.any? { |tag| table.at_css(tag) }
+        if table.at_css("col, colgroup, tfoot, thead, th")
           @data_tables.add(table)
           next
         end
@@ -410,17 +409,6 @@ module Readability
       is_data_table = ->(t) { @data_tables.include?(t) }
 
       remove_nodes(get_all_nodes_with_tag(elem, [tag])) do |node|
-        is_list = (tag == "ul" || tag == "ol")
-
-        unless is_list
-          list_length = 0
-          get_all_nodes_with_tag(node, ["ul", "ol"]).each do |list|
-            list_length += get_inner_text(list).length
-          end
-          node_text_length = get_inner_text(node).length
-          is_list = node_text_length > 0 && list_length.to_f / node_text_length > 0.9
-        end
-
         # First check if this node IS a data table
         if tag == "table" && is_data_table.call(node)
           next false
@@ -448,6 +436,16 @@ module Readability
         end
 
         inner_text = get_inner_text(node)
+        content_length = inner_text.length
+
+        is_list = (tag == "ul" || tag == "ol")
+        unless is_list
+          list_length = 0
+          get_all_nodes_with_tag(node, ["ul", "ol"]).each do |list|
+            list_length += inner_text_length(list)
+          end
+          is_list = content_length > 0 && list_length.to_f / content_length > 0.9
+        end
 
         if inner_text.count(",") < 10
           tag_counts = Hash.new(0)
@@ -456,7 +454,7 @@ module Readability
           img_count = tag_counts["img"]
           li_count = tag_counts["li"] - 100
           input_count = tag_counts["input"]
-          heading_density = get_text_density(node, ["h1", "h2", "h3", "h4", "h5", "h6"])
+          heading_density = get_text_density(node, HEADING_TAGS, text_length: content_length)
 
           embed_count = 0
           embeds = get_all_nodes_with_tag(node, ["object", "embed", "iframe"])
@@ -486,10 +484,8 @@ module Readability
             next true
           end
 
-          content_length = inner_text.length
           link_density = get_link_density(node, text_length: content_length)
-          textish_tags = %w[span li td] + DIV_TO_P_ELEMS.to_a
-          text_density = get_text_density(node, textish_tags)
+          text_density = get_text_density(node, TEXTISH_TAGS, text_length: content_length)
           is_figure_child = has_ancestor_tag?(node, "figure")
 
           # Apply shadiness checks
@@ -660,9 +656,7 @@ module Readability
             link.replace(text_node)
           else
             container = Nokogiri::XML::Node.new("span", @doc)
-            while link.children.first
-              container.add_child(link.children.first)
-            end
+            container.add_child(link.children)
             link.replace(container)
           end
         else
@@ -734,7 +728,7 @@ module Readability
         node["class"] = class_name
       end
 
-      child = node.element_children.first
+      child = node.first_element_child
       while child
         clean_classes(child)
         child = child.next_element

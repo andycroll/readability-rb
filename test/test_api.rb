@@ -173,4 +173,12 @@ class TestAPI < Minitest::Test
     html = "<html><body><article><div>BEFORE<br>&nbsp;<br>AFTER #{paragraphs}</div></article></body></html>"
     assert_includes Readability.parse(html).content, "<p>BEFORE</p>"
   end
+
+  # In Readability.js, comments split a div's text into separate text nodes,
+  # so the whitespace-only ones are trimmed before it wraps the text in a <p>.
+  def test_wrapped_text_split_by_comments_is_trimmed
+    paragraphs = "<p>#{"The quick brown fox jumps over the lazy dog, again and again. " * 2}</p>" * 6
+    html = "<html><body><article>#{paragraphs}<div>\n  <!-- a -->CAPTION<!-- b -->\n</div></article></body></html>"
+    assert_includes Readability.parse(html).content, "<p>CAPTION</p>"
+  end
 end
