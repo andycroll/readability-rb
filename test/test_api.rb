@@ -125,6 +125,16 @@ class TestAPI < Minitest::Test
     assert_equal "hello world", Readability.parse(many_attributes, max_attributes: 1100).text_content
   end
 
+  # Browsers replace a byte the page's charset doesn't define (0x98 in Windows-1251) with U+FFFD.
+  def test_undefined_byte_in_declared_charset_is_replaced
+    text = ("Привет, мир. " * 50 + "Пока").encode(Encoding::Windows_1251).b
+    html = "<html><head><meta charset=\"windows-1251\"></head><body><p>".b + text + "\x98</p></body></html>".b
+
+    assert_includes Readability.parse(html).text_content, "мир. Пока\uFFFD"
+    assert_includes Readability.parse(html.dup.force_encoding(Encoding::Windows_1251)).text_content, "мир. Пока\uFFFD"
+    assert Readability.readerable?(html)
+  end
+
   def test_document_accepts_nokogiri_doc
     doc = Nokogiri::HTML5("<html><body><p>#{"Test content. " * 100}</p></body></html>")
     result = Readability::Document.new(doc).parse
