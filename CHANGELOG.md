@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Require Nokogiri 1.17 or later
+- Parse about 5x faster with about 28% fewer allocations, and check `readerable?` about 2x faster. Trimming text was quadratic in the length of whitespace runs, several checks read the text of whole subtrees they didn't need, and every CSS query translated its selector to XPath again
+- Trim whitespace around text wrapped into paragraphs the way Readability.js does when an HTML comment split the text
+
 ## 0.9.1 (2026-11-23)
 
 - Stop `parse` and `readerable?` raising `Encoding::UndefinedConversionError` on a page with a byte its charset doesn't define, such as 0x98 in a Windows-1251 page. The byte becomes U+FFFD, as it does in browsers

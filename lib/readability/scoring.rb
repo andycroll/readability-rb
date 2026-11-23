@@ -51,15 +51,15 @@ module Readability
     # Returns the ratio of anchor text length to total text length.
     # Fragment-only links (#...) count at 0.3 coefficient.
     def get_link_density(element, text_length: nil)
-      text_length ||= get_inner_text(element).length
+      text_length ||= inner_text_length(element)
       return 0 if text_length == 0
 
       link_length = 0.0
 
-      element.css("a").each do |link_node|
+      css_query(element, "a").each do |link_node|
         href = link_node["href"]
         coefficient = href && HASH_URL.match?(href) ? 0.3 : 1.0
-        link_length += get_inner_text(link_node).length * coefficient
+        link_length += inner_text_length(link_node) * coefficient
       end
 
       link_length / text_length
@@ -67,13 +67,13 @@ module Readability
 
     # Port of _getTextDensity (JS line 2440)
     # Returns the ratio of text inside elements matching +tags+ to total text in element.
-    def get_text_density(element, tags)
-      text_length = get_inner_text(element, true).length
+    def get_text_density(element, tags, text_length: nil)
+      text_length ||= inner_text_length(element)
       return 0 if text_length == 0
 
       children_length = 0
       get_all_nodes_with_tag(element, tags).each do |child|
-        children_length += get_inner_text(child, true).length
+        children_length += inner_text_length(child)
       end
 
       children_length.to_f / text_length

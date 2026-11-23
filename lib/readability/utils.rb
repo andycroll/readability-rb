@@ -29,14 +29,43 @@ module Readability
 
     # Port of _getAllNodesWithTag (JS line 397)
     def get_all_nodes_with_tag(node, tag_names)
-      node.css(tag_names.join(","))
+      css_query(node, tag_names.join(","))
+    end
+
+    # Same as node.css(selector). Node#css translates the selector to XPath and
+    # sets up namespaces on every call, which costs more than running the query
+    # on the small subtrees scoring and cleaning look at. This translates each
+    # selector once per document type, the way Node#css does, and runs the
+    # XPath directly. A Document searches from "//" rather than ".//", so it
+    # keeps using css.
+    def css_query(node, selector)
+      return node.css(selector) if node.document?
+
+      doctype = node.document.xpath_doctype
+      xpath = (@xpath_cache[doctype] ||= {})[selector] ||= begin
+        visitor = Nokogiri::CSS::XPathVisitor.new(
+          builtins: Nokogiri::CSS::XPathVisitor::BuiltinsConfig::OPTIMAL,
+          doctype: doctype,
+          prefix: ".//",
+        )
+        Nokogiri::CSS.xpath_for(selector, visitor: visitor).join(" | ")
+      end
+      Nokogiri::XML::XPathContext.new(node).evaluate(xpath)
     end
 
     # JS-compatible trim that also strips Unicode whitespace like \u00A0 (NBSP)
     # JS's String.prototype.trim() strips all Unicode whitespace and \uFEFF (BOM).
     # Ruby's String#strip only removes ASCII whitespace.
+    #
+    # Finds the first and last non-space characters by byte offset (character
+    # offsets in non-ASCII strings cost a scan from the start) instead of using
+    # gsub(/\A\s+|\s+\z/), which rescans every interior whitespace run and is
+    # quadratic on the long text of large elements.
     def js_trim(str)
-      str.gsub(/\A[[:space:]\uFEFF]+|[[:space:]\uFEFF]+\z/, "")
+      first = str.byteindex(NON_SPACE) or return ""
+      str.byterindex(NON_SPACE)
+      last = Regexp.last_match.byteoffset(0)[1]
+      str.byteslice(first, last - first)
     end
 
     # Port of _getInnerText (JS line 2084)
@@ -46,9 +75,16 @@ module Readability
       text
     end
 
+    # Same as get_inner_text(element).length, for callers that only need the
+    # length. tr_s collapses each whitespace run to one character, as NORMALIZE
+    # does, at less than half the cost of the regex.
+    def inner_text_length(element)
+      js_trim(element.text).tr_s(SPACE_CHARS, " ").length
+    end
+
     # Port of _isWhitespace (JS line 2068)
     def is_whitespace?(node)
-      (node.text? && js_trim(node.text).empty?) ||
+      (node.text? && WHITESPACE.match?(node.text)) ||
         (node.element? && node.name == "br")
     end
 
@@ -72,11 +108,12 @@ module Readability
 
     # Port of _isElementWithoutContent (JS line 2028)
     def is_element_without_content?(node)
-      node.element? &&
-        js_trim(node.text).empty? &&
-        (node.element_children.empty? ||
-          node.element_children.length ==
-            node.css("br, hr").length)
+      return false unless node.element?
+
+      # Check the children first: reading the text walks the whole subtree.
+      children = node.element_children
+      (children.empty? || children.length == css_query(node, "br, hr").length) &&
+        WHITESPACE.match?(node.text)
     end
 
     # Port of _hasChildBlockElement (JS line 2044)
@@ -129,12 +166,13 @@ module Readability
     # Depth-first traversal.
     def get_next_node(node, ignore_self_and_kids = false)
       # First check for kids if those aren't being ignored
-      if !ignore_self_and_kids && node.element_children.first
-        return node.element_children.first
+      if !ignore_self_and_kids && (first_child = node.first_element_child)
+        return first_child
       end
 
       # Then for siblings...
-      return node.next_element if node.next_element
+      next_element = node.next_element
+      return next_element if next_element
 
       # And finally, move up the parent chain *and* find a sibling
       current = node
@@ -190,24 +228,24 @@ module Readability
       current = node
       while current
         return true if current.name == "img"
-        return false if current.element_children.length != 1 || !js_trim(current.text).empty?
+        children = current.element_children
+        return false if children.length != 1 || !WHITESPACE.match?(current.text)
 
-        current = current.element_children[0]
+        current = children[0]
       end
       false
     end
 
     # Port of _isValidByline (JS line 1005)
     def is_valid_byline?(node, match_string)
-      rel = node["rel"]
       itemprop = node["itemprop"]
-      byline_text = js_trim(node.text)
-
-      return false if byline_text.empty? || byline_text.length >= 100
-
-      rel == "author" ||
+      # Check the attributes before the text, which walks the whole subtree.
+      return false unless node["rel"] == "author" ||
         (itemprop && itemprop.include?("author")) ||
         BYLINE.match?(match_string)
+
+      byline_text = js_trim(node.text)
+      !byline_text.empty? && byline_text.length < 100
     end
 
     # Port of _isUrl (JS line 442)

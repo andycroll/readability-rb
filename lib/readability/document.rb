@@ -21,6 +21,7 @@ module Readability
       @metadata = {}
       @candidates = {}
       @data_tables = Set.new
+      @xpath_cache = {}
 
       # Options — from JS constructor lines 49-66
       @debug = !!options[:debug]
@@ -74,17 +75,15 @@ module Readability
       article_content = grab_article
       return nil unless article_content
 
-      log("Grabbed: #{article_content.inner_html}")
+      log("Grabbed: #{article_content.inner_html}") if @debug
 
       post_process_content(article_content)
 
       # If we haven't found an excerpt in the article's metadata, use the article's
       # first paragraph as the excerpt.
       if !metadata["excerpt"] || metadata["excerpt"].empty?
-        paragraphs = article_content.css("p")
-        if paragraphs.length > 0
-          metadata["excerpt"] = paragraphs[0].text.strip
-        end
+        first_paragraph = article_content.at_css("p")
+        metadata["excerpt"] = first_paragraph.text.strip if first_paragraph
       end
 
       text_content = article_content.text
@@ -216,38 +215,27 @@ module Readability
           # Turn all divs that don't have children block level elements into p's
           if node.name == "div"
             # Put phrasing content into paragraphs.
-            child_node = node.children.first
+            child_node = node.child
             while child_node
               next_sibling = child_node.next_sibling
               if is_phrasing_content?(child_node)
-                fragment = Nokogiri::HTML::DocumentFragment.new(@doc)
-                # Collect all consecutive phrasing content into a fragment.
-                loop do
-                  next_sibling = child_node.next_sibling
-                  fragment.add_child(child_node)
-                  child_node = next_sibling
-                  break unless child_node && is_phrasing_content?(child_node)
+                # Collect all consecutive phrasing content.
+                phrasing = []
+                while child_node && is_phrasing_content?(child_node)
+                  phrasing << child_node
+                  child_node = child_node.next_sibling
                 end
+                next_sibling = child_node
 
-                # Trim leading whitespace from the fragment.
-                while fragment.children.first && is_whitespace?(fragment.children.first)
-                  fragment.children.first.unlink
-                end
-                # Trim trailing whitespace from the fragment.
-                while fragment.children.last && is_whitespace?(fragment.children.last)
-                  fragment.children.last.unlink
-                end
+                # Trim leading and trailing whitespace.
+                phrasing.shift.unlink while phrasing.any? && is_whitespace?(phrasing.first)
+                phrasing.pop.unlink while phrasing.any? && is_whitespace?(phrasing.last)
 
-                # If the fragment contains anything, wrap it in a paragraph and
-                # insert it before the next non-phrasing node.
-                if fragment.children.first
+                # If anything is left, wrap it in a paragraph in its place.
+                if phrasing.any?
                   p_node = Nokogiri::XML::Node.new("p", @doc)
-                  p_node.add_child(fragment)
-                  if next_sibling
-                    next_sibling.add_previous_sibling(p_node)
-                  else
-                    node.add_child(p_node)
-                  end
+                  phrasing.first.add_previous_sibling(p_node)
+                  phrasing.each { |phrasing_node| p_node.add_child(phrasing_node) }
                 end
               end
               child_node = next_sibling
@@ -350,9 +338,9 @@ module Readability
           top_candidate = Nokogiri::XML::Node.new("div", @doc)
           needed_to_create_top_candidate = true
           # Move everything (not just elements, also text nodes etc.) into the container
-          while page.children.first
-            log("Moving child out:", page.children.first)
-            top_candidate.add_child(page.children.first)
+          page.children.each do |child|
+            log("Moving child out:", child)
+            top_candidate.add_child(child)
           end
 
           page.add_child(top_candidate)
@@ -493,9 +481,7 @@ module Readability
           div = Nokogiri::XML::Node.new("div", @doc)
           div["id"] = "readability-page-1"
           div["class"] = "page"
-          while article_content.children.first
-            div.add_child(article_content.children.first)
-          end
+          div.add_child(article_content.children)
           article_content.add_child(div)
         end
 
@@ -504,7 +490,7 @@ module Readability
         parse_successful = true
 
         # Check to see if we got any meaningful content.
-        text_length = get_inner_text(article_content, true).length
+        text_length = inner_text_length(article_content)
         if text_length < @char_threshold
           parse_successful = false
 
