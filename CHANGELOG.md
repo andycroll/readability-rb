@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Stop `parse` and `readerable?` raising `Encoding::UndefinedConversionError` on a page with a byte its charset doesn't define, such as 0x98 in a Windows-1251 page. The byte becomes U+FFFD, as it does in browsers
+
 ## 0.9.0 (2026-11-21)
 
 - Stop `parse` raising `ArgumentError` when it retries on a re-parsed copy of a page that passed `max_attributes` and `max_tree_depth`. The retry used Nokogiri's default limit of 400, so short pages nested about 400 deep failed even under the default limit of 1000
