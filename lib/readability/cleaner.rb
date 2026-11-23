@@ -240,7 +240,7 @@ module Readability
 
     # Port of _markDataTables (JS line 2297-2354)
     def mark_data_tables(root)
-      tables = root.css("table")
+      tables = css_query(root, "table")
       tables.each do |table|
         role = table["role"]
         if role == "presentation"
@@ -258,20 +258,20 @@ module Readability
           next
         end
 
-        caption = table.at_css("caption")
+        caption = css_query(table, "caption").first
         if caption && caption.children.length > 0
           @data_tables.add(table)
           next
         end
 
         # If the table has a descendant with any of these tags, consider a data table
-        if table.at_css("col, colgroup, tfoot, thead, th")
+        if css_query(table, "col, colgroup, tfoot, thead, th").first
           @data_tables.add(table)
           next
         end
 
         # Nested tables indicate a layout table
-        if table.at_css("table")
+        if css_query(table, "table").first
           next
         end
 
@@ -295,13 +295,13 @@ module Readability
     def get_row_and_column_count(table)
       rows = 0
       columns = 0
-      trs = table.css("tr")
+      trs = css_query(table, "tr")
       trs.each do |tr|
         rowspan = (tr["rowspan"] || 0).to_i
         rows += (rowspan > 0 ? rowspan : 1)
 
         columns_in_this_row = 0
-        cells = tr.css("td")
+        cells = css_query(tr, "td")
         cells.each do |cell|
           colspan = (cell["colspan"] || 0).to_i
           columns_in_this_row += (colspan > 0 ? colspan : 1)
@@ -424,7 +424,7 @@ module Readability
         end
 
         # Keep element if it contains a data table
-        if node.css("table").any? { |tbl| @data_tables.include?(tbl) }
+        if css_query(node, "table").any? { |tbl| @data_tables.include?(tbl) }
           next false
         end
 
@@ -449,7 +449,7 @@ module Readability
 
         if inner_text.count(",") < 10
           tag_counts = Hash.new(0)
-          node.css("p, img, li, input").each { |n| tag_counts[n.name] += 1 }
+          css_query(node, "p, img, li, input").each { |n| tag_counts[n.name] += 1 }
           p_count = tag_counts["p"]
           img_count = tag_counts["img"]
           li_count = tag_counts["li"] - 100
@@ -531,7 +531,7 @@ module Readability
             end
 
             if all_single_child
-              li_total = node.css("li").length
+              li_total = css_query(node, "li").length
               have_to_remove = false if img_count == li_total
             end
           end

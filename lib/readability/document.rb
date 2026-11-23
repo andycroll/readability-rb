@@ -21,6 +21,7 @@ module Readability
       @metadata = {}
       @candidates = {}
       @data_tables = Set.new
+      @xpath_cache = {}
 
       # Options — from JS constructor lines 49-66
       @debug = !!options[:debug]

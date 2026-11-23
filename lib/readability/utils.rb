@@ -29,7 +29,28 @@ module Readability
 
     # Port of _getAllNodesWithTag (JS line 397)
     def get_all_nodes_with_tag(node, tag_names)
-      node.css(tag_names.join(","))
+      css_query(node, tag_names.join(","))
+    end
+
+    # Same as node.css(selector). Node#css translates the selector to XPath and
+    # sets up namespaces on every call, which costs more than running the query
+    # on the small subtrees scoring and cleaning look at. This translates each
+    # selector once per document type, the way Node#css does, and runs the
+    # XPath directly. A Document searches from "//" rather than ".//", so it
+    # keeps using css.
+    def css_query(node, selector)
+      return node.css(selector) if node.document?
+
+      doctype = node.document.xpath_doctype
+      xpath = (@xpath_cache[doctype] ||= {})[selector] ||= begin
+        visitor = Nokogiri::CSS::XPathVisitor.new(
+          builtins: Nokogiri::CSS::XPathVisitor::BuiltinsConfig::OPTIMAL,
+          doctype: doctype,
+          prefix: ".//",
+        )
+        Nokogiri::CSS.xpath_for(selector, visitor: visitor).join(" | ")
+      end
+      Nokogiri::XML::XPathContext.new(node).evaluate(xpath)
     end
 
     # JS-compatible trim that also strips Unicode whitespace like \u00A0 (NBSP)
@@ -91,7 +112,7 @@ module Readability
 
       # Check the children first: reading the text walks the whole subtree.
       children = node.element_children
-      (children.empty? || children.length == node.css("br, hr").length) &&
+      (children.empty? || children.length == css_query(node, "br, hr").length) &&
         WHITESPACE.match?(node.text)
     end
 

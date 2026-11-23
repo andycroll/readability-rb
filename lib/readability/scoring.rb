@@ -56,7 +56,7 @@ module Readability
 
       link_length = 0.0
 
-      element.css("a").each do |link_node|
+      css_query(element, "a").each do |link_node|
         href = link_node["href"]
         coefficient = href && HASH_URL.match?(href) ? 0.3 : 1.0
         link_length += inner_text_length(link_node) * coefficient
