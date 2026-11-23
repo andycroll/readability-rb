@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.10.0 (2026-11-23)
+
 - Require Nokogiri 1.17 or later
 - Parse about 5x faster with about 28% fewer allocations, and check `readerable?` about 2x faster. Trimming text was quadratic in the length of whitespace runs, several checks read the text of whole subtrees they didn't need, and every CSS query translated its selector to XPath again
 - Trim whitespace around text wrapped into paragraphs the way Readability.js does when an HTML comment split the text
