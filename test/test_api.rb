@@ -181,4 +181,14 @@ class TestAPI < Minitest::Test
     html = "<html><body><article>#{paragraphs}<div>\n  <!-- a -->CAPTION<!-- b -->\n</div></article></body></html>"
     assert_includes Readability.parse(html).content, "<p>CAPTION</p>"
   end
+
+  # Readability.js always runs _fixRelativeUris, so link handling must not depend on url:.
+  def test_javascript_links_become_text_without_url
+    paragraphs = "<p>#{"The quick brown fox jumps over the lazy dog, again and again. " * 2}</p>" * 6
+    links = "<p>Click <a href='javascript:void(0)'>here</a> or <a href='javascript:go()'><b>there</b> now</a>, " \
+            "<a href='/rel'>rel</a> <img src='pic.png'></p>"
+    content = Readability.parse("<html><body><article>#{paragraphs}#{links}</article></body></html>").content
+
+    assert_includes content, "Click here or <span><b>there</b> now</span>, <a href=\"/rel\">rel</a> <img src=\"pic.png\">"
+  end
 end
