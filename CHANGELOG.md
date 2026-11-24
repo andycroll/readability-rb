@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Process links the same way whether or not `parse` is given `url:`, as Readability.js does. Without a URL, relative URLs are still left as they are
+
 ## 0.10.0 (2026-11-23)
 
 - Require Nokogiri 1.17 or later

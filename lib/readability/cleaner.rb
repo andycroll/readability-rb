@@ -584,11 +584,10 @@ module Readability
     # Port of _fixRelativeUris (JS line 457-536)
     def fix_relative_uris(article_content)
       document_uri = @url
-      return unless document_uri
 
       # Compute the effective base URI, considering <base> elements (like JS document.baseURI)
       base_uri = document_uri
-      base_element = @doc.at_css("base[href]")
+      base_element = document_uri && @doc.at_css("base[href]")
       if base_element
         base_href = base_element["href"]
         if base_href && !base_href.empty?
@@ -601,6 +600,9 @@ module Readability
       end
 
       to_absolute_uri = lambda do |uri|
+        # Without a document URL there is nothing to resolve against
+        return uri unless document_uri
+
         # Strip whitespace — Nokogiri preserves newlines in attributes,
         # but JS DOM normalizes them
         uri = uri.strip
