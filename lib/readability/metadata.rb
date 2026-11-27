@@ -128,7 +128,8 @@ module Readability
       orig_title = ""
 
       begin
-        cur_title = orig_title = js_trim(@doc.at_css("title")&.text || "")
+        # JS reads document.title, which collapses runs of ASCII whitespace
+        cur_title = orig_title = js_trim((@doc.at_css("title")&.text || "").gsub(/[\t\n\f\r ]+/, " "))
 
         # If title came back as something other than a string (shouldn't happen
         # with Nokogiri, but match JS logic)
