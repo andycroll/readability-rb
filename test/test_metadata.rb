@@ -134,4 +134,20 @@ class TestMetadata < Minitest::Test
     html = "<html><head><title>#{title}</title></head><body><h1>&nbsp;#{title}&nbsp;</h1><article>#{BODY}#{BODY}</article></body></html>"
     assert_equal title, Readability.parse(html).title
   end
+
+  # Readability.js reads document.title, which collapses runs of ASCII whitespace.
+  def test_title_collapses_whitespace_like_document_title
+    {
+      "\n  Hello\n  World\n" => "Hello World",
+      "My\tlong article title here\n | Site" => "My long article title here",
+      "A  B: c d e f" => "A B: c d e f",
+      "Why the fox jumps\n- Example Site" => "Why the fox jumps - Example Site",
+      "Hello\fWorld" => "Hello World",
+      "Hello\vWorld" => "Hello\vWorld",
+      "Hello&nbsp;&nbsp;World" => "Hello\u00A0\u00A0World",
+    }.each do |title, expected|
+      html = "<html><head><title>#{title}</title></head><body><article>#{BODY}#{BODY}</article></body></html>"
+      assert_equal expected, Readability.parse(html).title, title.inspect
+    end
+  end
 end

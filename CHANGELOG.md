@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Collapse runs of whitespace in the `<title>`, as Readability.js does: a title split over several lines now comes back on one line (`<title>\n  Hello\n  World\n</title>` gives `Hello World`)
+
 ## 0.10.0 (2026-11-23)
 
 - Require Nokogiri 1.17 or later
